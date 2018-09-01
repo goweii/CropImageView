@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <declare-styleable name="CropImageView">
+        <attr name="crop_type" format="enum">
+            <enum name="center" value="0" />
+            <enum name="centerLeft" value="1" />
+            <enum name="centerRight" value="2" />
+            <enum name="centerTop" value="3" />
+            <enum name="centerBottom" value="4" />
+            <enum name="topLeft" value="5" />
+            <enum name="topRight" value="6" />
+            <enum name="bottomLeft" value="7" />
+            <enum name="bottomRight" value="8" />
+        </attr>
+    </declare-styleable>
+
+</resources>
