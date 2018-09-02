@@ -12,6 +12,7 @@ import android.support.annotation.IntDef;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.AppCompatImageView;
 import android.util.AttributeSet;
+import android.view.animation.LinearInterpolator;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -268,6 +269,7 @@ public class CropImageView extends AppCompatImageView {
         });
         long duration = (long) (mAutoMoveDuration * (Math.pow(Math.pow(percentX - mPercentX, 2) + Math.pow(percentY - mPercentY, 2), 0.5)) / Math.pow(2, 0.5));
         mAutoMoveAnim.setDuration(duration);
+        mAutoMoveAnim.setInterpolator(new LinearInterpolator());
         mAutoMoveAnim.addListener(new Animator.AnimatorListener() {
             @Override
             public void onAnimationStart(Animator animator) {
