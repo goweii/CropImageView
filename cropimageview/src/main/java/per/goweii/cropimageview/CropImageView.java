@@ -1,7 +1,6 @@
 package per.goweii.cropimageview;
 
 import android.animation.Animator;
-import android.animation.AnimatorSet;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.content.res.TypedArray;
@@ -33,7 +32,7 @@ public class CropImageView extends AppCompatImageView {
     private float mPercentX;
     private float mPercentY;
     private boolean mAutoMove;
-    private AnimatorSet mAutoMoveAnim = null;
+    private ValueAnimator mAutoMoveAnim = null;
     private float mCropScale;
     private int mAutoMoveDuration;
 
@@ -79,6 +78,12 @@ public class CropImageView extends AppCompatImageView {
 
     public void setAutoMove(boolean autoMove) {
         mAutoMove = autoMove;
+        if (!autoMove) {
+            if (mAutoMoveAnim != null) {
+                mAutoMoveAnim.cancel();
+                mAutoMoveAnim = null;
+            }
+        }
         invalidate();
     }
 
@@ -113,15 +118,18 @@ public class CropImageView extends AppCompatImageView {
         mCropScale = typedArray.getFloat(R.styleable.CropImageView_crop_scale, 1);
         typedArray.recycle();
 
-        if (mAutoMoveDuration < 0){
+        if (mAutoMoveDuration < 0) {
             mAutoMoveDuration = AUTO_MOVE_ANIM_DURATION_DEFAULT;
         }
-        if (mCropScale < 1){
+        if (mCropScale < 1) {
             mCropScale = 1;
         }
     }
 
     private void initAutoMoveAnim() {
+        if (!mAutoMove) {
+            return;
+        }
         if (mAutoMoveAnim != null) {
             return;
         }
@@ -130,8 +138,8 @@ public class CropImageView extends AppCompatImageView {
         mPercentX = percent[0];
         mPercentY = percent[1];
 
-        float percentX;
-        float percentY;
+        final float percentX;
+        final float percentY;
 
         Random random = new Random();
         if (mPercentX == 0) {
@@ -244,22 +252,20 @@ public class CropImageView extends AppCompatImageView {
             }
         }
 
-        ValueAnimator autoMoveAnimX = ValueAnimator.ofFloat(mPercentX, percentX);
-        autoMoveAnimX.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+        mAutoMoveAnim = ValueAnimator.ofFloat(0, 1);
+        mAutoMoveAnim.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            private float startX = mPercentX;
+            private float endX = percentX;
+            private float startY = mPercentY;
+            private float endY = percentY;
+
             @Override
             public void onAnimationUpdate(ValueAnimator valueAnimator) {
-                mPercentX = (float) valueAnimator.getAnimatedValue();
+                float f = (float) valueAnimator.getAnimatedValue();
+                mPercentX = startX + (endX - startX) * f;
+                mPercentY = startY + (endY - startY) * f;
             }
         });
-        ValueAnimator autoMoveAnimY = ValueAnimator.ofFloat(mPercentY, percentY);
-        autoMoveAnimY.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-            @Override
-            public void onAnimationUpdate(ValueAnimator valueAnimator) {
-                mPercentY = (float) valueAnimator.getAnimatedValue();
-            }
-        });
-        mAutoMoveAnim = new AnimatorSet();
-        mAutoMoveAnim.playTogether(autoMoveAnimX, autoMoveAnimY);
         long duration = (long) (mAutoMoveDuration * (Math.pow(Math.pow(percentX - mPercentX, 2) + Math.pow(percentY - mPercentY, 2), 0.5)) / Math.pow(2, 0.5));
         mAutoMoveAnim.setDuration(duration);
         mAutoMoveAnim.addListener(new Animator.AnimatorListener() {
@@ -305,11 +311,6 @@ public class CropImageView extends AppCompatImageView {
         if (mAutoMove) {
             initAutoMoveAnim();
             invalidate();
-        } else {
-            if (mAutoMoveAnim != null) {
-                mAutoMoveAnim.cancel();
-                mAutoMoveAnim = null;
-            }
         }
     }
 
