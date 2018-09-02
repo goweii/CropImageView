@@ -2,6 +2,8 @@
 <resources>
 
     <declare-styleable name="CropImageView">
+
+        <!--裁剪对齐位置的枚举值，无法与下面的两个crop_percent共存，同时存在时以crop_percent为准-->
         <attr name="crop_type" format="enum">
             <enum name="center" value="0" />
             <enum name="centerLeft" value="1" />
@@ -13,6 +15,18 @@
             <enum name="bottomLeft" value="7" />
             <enum name="bottomRight" value="8" />
         </attr>
+
+        <!--无法与上面的crop_type共存，同时存在时以crop_percent为准-->
+        <!--X方向的对齐位置，取值范围0~1-->
+        <attr name="crop_percent_x" format="float" />
+        <!--X方向的对齐位置，取值范围0~1-->
+        <attr name="crop_percent_y" format="float" />
+
+        <attr name="crop_auto_move" format="boolean" />
+        <attr name="crop_auto_move_duration" format="integer" />
+
+        <attr name="crop_scale" format="float" />
+
     </declare-styleable>
 
 </resources>

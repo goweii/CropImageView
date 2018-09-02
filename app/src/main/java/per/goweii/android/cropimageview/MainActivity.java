@@ -34,6 +34,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         findViewById(R.id.tv_left_bottom).setOnClickListener(this);
         findViewById(R.id.tv_right_top).setOnClickListener(this);
         findViewById(R.id.tv_right_bottom).setOnClickListener(this);
+        findViewById(R.id.tv_anim_start).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                crop_image_view.setAutoMove(true);
+            }
+        });
+        findViewById(R.id.tv_anim_cancel).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                crop_image_view.setAutoMove(false);
+            }
+        });
         findViewById(R.id.tv_anim_w).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
