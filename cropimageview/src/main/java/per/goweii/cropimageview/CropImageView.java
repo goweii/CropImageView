@@ -1,6 +1,7 @@
 package per.goweii.cropimageview;
 
 import android.animation.Animator;
+import android.animation.TimeInterpolator;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.content.res.TypedArray;
@@ -9,9 +10,11 @@ import android.graphics.Matrix;
 import android.graphics.drawable.Drawable;
 import android.support.annotation.FloatRange;
 import android.support.annotation.IntDef;
+import android.support.annotation.IntRange;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.AppCompatImageView;
 import android.util.AttributeSet;
+import android.view.animation.DecelerateInterpolator;
 import android.view.animation.LinearInterpolator;
 
 import java.lang.annotation.Retention;
@@ -36,6 +39,9 @@ public class CropImageView extends AppCompatImageView {
     private ValueAnimator mAutoMoveAnim = null;
     private float mCropScale;
     private int mAutoMoveDuration;
+    private ValueAnimator mSmoothMoveAnim = null;
+    private long mSmoothMoveAnimDuration = 200;
+    private TimeInterpolator mSmoothMoveAnimInterpolator = null;
 
     public CropImageView(Context context) {
         this(context, null);
@@ -47,34 +53,145 @@ public class CropImageView extends AppCompatImageView {
         initAttrs(attrs);
     }
 
+    public void setSmoothMoveAnimDuration(@IntRange(from = 0) long smoothMoveAnimDuration) {
+        mSmoothMoveAnimDuration = smoothMoveAnimDuration;
+    }
+
+    public long getSmoothMoveAnimDuration() {
+        return mSmoothMoveAnimDuration;
+    }
+
+    public void setSmoothMoveAnimInterpolator(TimeInterpolator smoothMoveAnimInterpolator) {
+        mSmoothMoveAnimInterpolator = smoothMoveAnimInterpolator;
+    }
+
+    public TimeInterpolator getSmoothMoveAnimInterpolator() {
+        return mSmoothMoveAnimInterpolator;
+    }
+
     public void setCropType(@Type int cropType) {
         this.mCropType = cropType;
-        invalidate();
+        float[] percent = getPercentFromCropType();
+        setCropPercent(percent[0], percent[1]);
     }
 
     public int getCropType() {
         return mCropType;
     }
 
-    public void setCropPercent(@FloatRange(from = 0, to = 1) float percentX,
-                               @FloatRange(from = 0, to = 1) float percentY) {
-        this.mPercentX = percentX;
-        this.mPercentY = percentY;
-        invalidate();
+    public void setCropPercent(@FloatRange(from = 0, to = 1) final float percentX,
+                               @FloatRange(from = 0, to = 1) final float percentY) {
+        if (mSmoothMoveAnimDuration > 0){
+            if (mAutoMove){
+                setAutoMove(false);
+                if (mSmoothMoveAnim != null){
+                    mSmoothMoveAnim.cancel();
+                    mSmoothMoveAnim = null;
+                }
+                mSmoothMoveAnim = ValueAnimator.ofFloat(0, 1);
+                mSmoothMoveAnim.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                    private float startX = mPercentX;
+                    private float endX = percentX;
+                    private float startY = mPercentY;
+                    private float endY = percentY;
+
+                    @Override
+                    public void onAnimationUpdate(ValueAnimator valueAnimator) {
+                        float f = (float) valueAnimator.getAnimatedValue();
+                        mPercentX = startX + (endX - startX) * f;
+                        mPercentY = startY + (endY - startY) * f;
+                        invalidate();
+                    }
+                });
+                mSmoothMoveAnim.setDuration(mSmoothMoveAnimDuration);
+                mSmoothMoveAnim.setInterpolator(mSmoothMoveAnimInterpolator != null ? mSmoothMoveAnimInterpolator : new DecelerateInterpolator());
+                mSmoothMoveAnim.addListener(new Animator.AnimatorListener() {
+                    @Override
+                    public void onAnimationStart(Animator animator) {
+                    }
+
+                    @Override
+                    public void onAnimationEnd(Animator animator) {
+                        mSmoothMoveAnim = null;
+                        setAutoMove(true);
+                    }
+
+                    @Override
+                    public void onAnimationCancel(Animator animator) {
+                        mSmoothMoveAnim = null;
+                        setAutoMove(true);
+                    }
+
+                    @Override
+                    public void onAnimationRepeat(Animator animator) {
+                    }
+                });
+                mSmoothMoveAnim.start();
+            } else {
+                if (mSmoothMoveAnim != null){
+                    mSmoothMoveAnim.cancel();
+                    mSmoothMoveAnim = null;
+                }
+                mSmoothMoveAnim = ValueAnimator.ofFloat(0, 1);
+                mSmoothMoveAnim.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                    private float startX = mPercentX;
+                    private float endX = percentX;
+                    private float startY = mPercentY;
+                    private float endY = percentY;
+
+                    @Override
+                    public void onAnimationUpdate(ValueAnimator valueAnimator) {
+                        float f = (float) valueAnimator.getAnimatedValue();
+                        mPercentX = startX + (endX - startX) * f;
+                        mPercentY = startY + (endY - startY) * f;
+                        invalidate();
+                    }
+                });
+                mSmoothMoveAnim.setDuration(mSmoothMoveAnimDuration);
+                mSmoothMoveAnim.setInterpolator(mSmoothMoveAnimInterpolator != null ? mSmoothMoveAnimInterpolator : new DecelerateInterpolator());
+                mSmoothMoveAnim.addListener(new Animator.AnimatorListener() {
+                    @Override
+                    public void onAnimationStart(Animator animator) {
+                    }
+
+                    @Override
+                    public void onAnimationEnd(Animator animator) {
+                        mSmoothMoveAnim = null;
+                    }
+
+                    @Override
+                    public void onAnimationCancel(Animator animator) {
+                        mSmoothMoveAnim = null;
+                    }
+
+                    @Override
+                    public void onAnimationRepeat(Animator animator) {
+                    }
+                });
+                mSmoothMoveAnim.start();
+            }
+        } else {
+            if (mAutoMove){
+                setAutoMove(false);
+                this.mPercentX = percentX;
+                this.mPercentY = percentY;
+                setAutoMove(true);
+            } else {
+                this.mPercentX = percentX;
+                this.mPercentY = percentY;
+                invalidate();
+            }
+        }
+    }
+
+    public float[] getCropPercent() {
+        return new float[]{mPercentX, mPercentY};
     }
 
     public void clearCropPercent() {
         this.mPercentX = -1;
         this.mPercentY = -1;
         invalidate();
-    }
-
-    public float getPercentX() {
-        return mPercentX;
-    }
-
-    public float getPercentY() {
-        return mPercentY;
     }
 
     public void setAutoMove(boolean autoMove) {
@@ -111,7 +228,7 @@ public class CropImageView extends AppCompatImageView {
 
     protected void initAttrs(AttributeSet attrs) {
         TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.CropImageView);
-        mCropType = typedArray.getInt(R.styleable.CropImageView_crop_type, 0);
+        mCropType = typedArray.getInt(R.styleable.CropImageView_crop_type, CropType.CENTER);
         mPercentX = typedArray.getFloat(R.styleable.CropImageView_crop_percent_x, -1);
         mPercentY = typedArray.getFloat(R.styleable.CropImageView_crop_percent_y, -1);
         mAutoMove = typedArray.getBoolean(R.styleable.CropImageView_crop_auto_move, false);
@@ -119,6 +236,13 @@ public class CropImageView extends AppCompatImageView {
         mCropScale = typedArray.getFloat(R.styleable.CropImageView_crop_scale, 1);
         typedArray.recycle();
 
+        float[] percent = getPercentFromCropType();
+        if (mPercentX == -1) {
+            mPercentX = percent[0];
+        }
+        if (mPercentY == -1) {
+            mPercentY = percent[1];
+        }
         if (mAutoMoveDuration < 0) {
             mAutoMoveDuration = AUTO_MOVE_ANIM_DURATION_DEFAULT;
         }
@@ -135,7 +259,7 @@ public class CropImageView extends AppCompatImageView {
             return;
         }
 
-        float[] percent = getPercent();
+        float[] percent = getCropPercent();
         mPercentX = percent[0];
         mPercentY = percent[1];
 
@@ -332,7 +456,7 @@ public class CropImageView extends AppCompatImageView {
         final int vWidth = getWidth();
         final int vHeight = getHeight();
 
-        float[] percent = getPercent();
+        float[] percent = getCropPercent();
         float percentX = percent[0];
         float percentY = percent[1];
 
@@ -352,14 +476,6 @@ public class CropImageView extends AppCompatImageView {
 
         matrix.setScale(scale, scale);
         matrix.postTranslate(Math.round(dx), Math.round(dy));
-    }
-
-    private float[] getPercent() {
-        if (mPercentX >= 0 && mPercentX <= 1 && mPercentY >= 0 && mPercentY <= 1) {
-            return new float[]{mPercentX, mPercentY};
-        } else {
-            return getPercentFromCropType();
-        }
     }
 
     private float[] getPercentFromCropType() {
