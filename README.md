@@ -9,7 +9,7 @@
 
 # 截图
 
-](https://raw.githubusercontent.com/goweii/CropImageView/master/picture/crop_image_view_demo.gif?raw=true)
+![](https://raw.githubusercontent.com/goweii/CropImageView/master/picture/crop_image_view_demo.gif?raw=true)
 
 
 
