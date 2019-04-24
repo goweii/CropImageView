@@ -30,9 +30,11 @@ allprojects {
 
 [最新版请看](https://github.com/goweii/CropImageView/releases)
 
+从1.2.1版本开始，版本号前不加v，引用时需要注意。
+
 ```java
 dependencies {
-	implementation 'com.github.goweii:CropImageView:v1.1.0'
+	implementation 'com.github.goweii:CropImageView:1.2.1'
 }
 ```
 
